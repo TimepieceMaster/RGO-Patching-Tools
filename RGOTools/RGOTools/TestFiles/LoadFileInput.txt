@@ -1,0 +1,16 @@
+This is just a bunch of text being used in order to test the ability
+to load in files. Nothing special. You might think having a test
+like this is overkill, and probably it is. But it's more about the
+principle of the thing! I come from a testing background,
+it wouldn't be right to not have this publically released code of
+mine not be thoroughly tested!
+
+In fact, I'll have you know that this very test did some real good.
+This test actually failed the first time around. Though maybe
+my inability to get something so simple right the first time
+around says something about my coding ability......
+
+NOPE! Everyone makes mistakes :)
+A smart programmer recognizes this!
+
+-- TimepieceMaster
