@@ -7,10 +7,6 @@
 
 void RunAllTests(void);
 
-void TestUtilLoadFile(
-	const char* validPath,
-	const char* writePath,
-	const char* invalidPath
-);
+void TestUtilLoadFile(const char* validPath, const char* writePath, const char* invalidPath);
 
 #endif

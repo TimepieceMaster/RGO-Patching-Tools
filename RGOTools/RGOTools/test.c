@@ -10,18 +10,11 @@
 /* Runs all of the tests */
 void RunAllTests(void)
 {
-	TestUtilLoadFile(
-		TEST_UTIL_LOAD_FILE_INPUT,
-		TEST_UTIL_LOAD_FILE_OUTPUT,
-		TEST_UTIL_LOAD_FILE_INVALID
-	);
+	TestUtilLoadFile(TEST_UTIL_LOAD_FILE_INPUT, TEST_UTIL_LOAD_FILE_OUTPUT, TEST_UTIL_LOAD_FILE_INVALID);
 }
 
 /* Tests the correctness of LoadFile in util.c */
-void TestUtilLoadFile(
-	const char* validPath, 
-	const char* writePath, 
-	const char* invalidPath) 
+void TestUtilLoadFile(const char* validPath, const char* writePath, const char* invalidPath)
 {
 	Memory file = { 0 };
 	FILE* pWriteFile = NULL;
