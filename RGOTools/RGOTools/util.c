@@ -25,12 +25,7 @@ Memory LoadFile(const char* filePath)
 	Memory ret = { 0 };
 
 	/* Open file */
-	pFile = fopen(filePath, "rb");
-	if (!pFile)
-	{
-		printf("ERROR: Could not open file at %s\n", filePath);
-		return ret;
-	}
+	pFile = FOpenMustSucceed(filePath, "rb");
 
 	/* Get file size */
 	fseek(pFile, 0, SEEK_END);
@@ -39,19 +34,56 @@ Memory LoadFile(const char* filePath)
 	fileSize -= ftell(pFile);
 
 	/* Read in file */
-	pData = malloc(fileSize);
-	if (!pData)
-	{
-		printf("ERROR: Allocation of %u bytes failed\n", fileSize);
-		fclose(pFile);
-		return ret;
-	}
+	pData = MallocMustSucceed(fileSize);
 
 	fread(pData, fileSize, 1, pFile);
 	ret.data = pData;
 	ret.size = fileSize;
 
 	fclose(pFile);
+	return ret;
+}
+
+/* Using a loaded in list of files, create a usuable list of file path strings.
+ * Parameter: file - the loaded in list of files.
+              Note that this function modifies the underlying data
+			  so it is suitable to be referenced by a FileList. The Memory still maintains responsibility
+			  over the actual data though, so it still must free its data.
+ * Return: a FileList containing a list of pointers to file where each file path string starts. */
+FileList InitFileList(Memory file)
+{
+	FileList ret = { 0 };
+	u32 i = 0;
+	u32 pathsSet = 1; /* First path is always at the start of file.data */
+
+	/* Find how many file paths there are */
+	for (i = 0; i < file.size; ++i)
+	{
+		if (file.data[i] == '\n')
+		{
+			/* Turn newline to null terminator so it marks the end of the file path string */
+			file.data[i] = '\0';
+			++ret.nFiles;
+		}
+	}
+	ret.paths = MallocMustSucceed(sizeof(const char*) * ret.nFiles);
+
+	/* Set up pointers to each file path */
+	ret.paths[0] = (char*)file.data;
+
+	for (i = 0; i < file.size; ++i)
+	{
+		if (file.data[i] == '\0')
+		{
+			ret.paths[pathsSet] = (char*)&file.data[i + 1];
+			++pathsSet;
+			if (pathsSet >= ret.nFiles)
+			{
+				break;
+			}
+		}
+	}
+
 	return ret;
 }
 
@@ -63,21 +95,44 @@ u32 LittleEndianRead32(const u8* data)
 	return data[0] + (data[1] << 8) + (data[2] << 16) + (data[3] << 24);
 }
 
+/* A wrapper for malloc that terminates the program on failure.
+ * Parameter: size - the number of bytes to allocate.
+ * Return: a pointer to the allocated memory */
+void* MallocMustSucceed(size_t size)
+{
+	void* result = malloc(size);
+	if (!result && size)
+	{
+		printf("ERROR: Allocation of %llu bytes failed\n", size);
+		exit(-1);
+	}
+	return result;
+}
+
+/* A wrapper for fopen that terminates the program on failure.
+ * Parameter: path - the path to the file to open
+ * Parameter: mode - the mode to open the file in */
+FILE* FOpenMustSucceed(const char* path, const char* mode)
+{
+	FILE* file = fopen(path, mode);
+	if (!file)
+	{
+		printf("ERROR: Could not open file at %s\n", path);
+		exit(-1);
+	}
+	return file;
+}
+
 /* Generates the list of file names for the images in RGO PSP.
  * Parameter: path - the path where the file names should be written. */
-bool32 GeneratePSPImageFileList(void)
+void GeneratePSPImageFileList(void)
 {
 	const u32 startNum = 824;
 	const u32 endNum = 2539;
 	FILE* pFile = NULL;
 	u32 i = 0;
 
-	pFile = fopen(PSP_IMAGES_FILE_LIST, "wb");
-	if (!pFile)
-	{
-		printf("ERROR: Could not open file at %s\n", PSP_IMAGES_FILE_LIST);
-		return FALSE;
-	}
+	pFile = FOpenMustSucceed(PSP_IMAGES_FILE_LIST, "wb");
 
 	for (i = startNum; i <= endNum; ++i)
 	{
@@ -85,14 +140,13 @@ bool32 GeneratePSPImageFileList(void)
 	}
 
 	fclose(pFile);
-	return TRUE;
 }
 
 /* Generates the list of file names for the images in RGO PS2.
  * Parameter: path - the path where the file names should be written.
  * Return: whether or not the file list was successfully generated. */
 #ifdef _WIN32
-bool32 GeneratePS2ImageFileList(void)
+void GeneratePS2ImageFileList(void)
 {
 	const char* directories[] =
 	{
@@ -108,15 +162,9 @@ bool32 GeneratePS2ImageFileList(void)
 
 	u32 i = 0;
 
-	pFile = fopen(PS2_IMAGES_FILE_LIST, "wb");
+	pFile = FOpenMustSucceed(PS2_IMAGES_FILE_LIST, "wb");
 
-	if (!pFile)
-	{
-		printf("ERROR: Could not open file at %s\n", PSP_IMAGES_FILE_LIST);
-		return FALSE;
-	}
-
-	for (i = 0; i < sizeof(directories) / sizeof(const char*); ++i)
+	for (i = 0; i < NUM_ELEMENTS(directories); ++i)
 	{
 		strcpy(buffer, directories[i]);
 		strcat(buffer, "/*");
@@ -127,7 +175,7 @@ bool32 GeneratePS2ImageFileList(void)
 		{
 			printf("ERROR: Could not find directory %s\n", directories[i]);
 			fclose(pFile);
-			return FALSE;
+			return;
 		}
 
 		FindNextFileA(hFind, &findData); /* discard .. */
@@ -142,19 +190,16 @@ bool32 GeneratePS2ImageFileList(void)
 			printf("ERROR: Failed to get all files in directory %s\n", directories[i]);
 			FindClose(hFind);
 			fclose(pFile);
-			return FALSE;
 		}
 		FindClose(hFind);
 	}
 
 	fclose(pFile);
-	return TRUE;
 }
 #else
-bool32 GeneratePS2ImageFileList(void)
+void GeneratePS2ImageFileList(void)
 {
 	printf("ERROR: GeneratePS2ImageFileList is only supported on Windows.\n"
 		"Make sure that %s has not been deleted, moved, or renamed.\n", PS2_IMAGES_FILE_LIST);
-	return FALSE;
 }
 #endif

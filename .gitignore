@@ -5,7 +5,7 @@ PS2Images/BU/
 PS2Images/FC/
 
 # Test log files
-*.log
+TestFiles/Results
 
 # Programs used in the patching process that aren't mine
 OtherPrograms/

@@ -11,6 +11,8 @@
 #define FALSE 0
 #define TRUE (!FALSE)
 
+#define NUM_ELEMENTS(x) (sizeof(x) / sizeof(x[0]))
+
 typedef unsigned char u8;
 typedef unsigned int u32;
 typedef unsigned int bool32;
@@ -21,9 +23,18 @@ typedef struct
 	u8* data;
 } Memory;
 
+typedef struct
+{
+	char** paths;
+	u32 nFiles;
+} FileList;
+
 Memory LoadFile(const char* filePath);
+FileList InitFileList(Memory file);
 u32 LittleEndianRead32(const u8* data);
-bool32 GeneratePSPImageFileList(void);
-bool32 GeneratePS2ImageFileList(void);
+void* MallocMustSucceed(size_t size);
+FILE* FOpenMustSucceed(const char* path, const char* mode);
+void GeneratePSPImageFileList(void);
+void GeneratePS2ImageFileList(void);
 
 #endif
