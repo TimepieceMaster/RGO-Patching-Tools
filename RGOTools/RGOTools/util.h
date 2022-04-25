@@ -4,6 +4,8 @@
 #define PSP_IMAGES_FILE_LIST "TestFiles/PSPImages/filelist.txt"
 #define PS2_IMAGES_FILE_LIST "TestFiles/PS2Images/filelist.txt"
 #define PSP_IMAGES_DIRECTORY "TestFiles/PSPImages/BIN/"
+#define PSP_IMAGES_START_NUM 824
+#define PSP_IMAGES_END_NUM 2539
 #define PS2_IMAGES_BK_DIRECTORY "TestFiles/PS2Images/BK/"
 #define PS2_IMAGES_BU_DIRECTORY "TestFiles/PS2Images/BU/"
 #define PS2_IMAGES_FC_DIRECTORY "TestFiles/PS2Images/FC/"

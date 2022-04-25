@@ -64,8 +64,6 @@ void TestImageGetNumPalettes(const char* writePath)
 	FileList fileList = { 0 };
 	Memory image = { 0 };
 	u32 nPalettes = 0;
-	u32 nImages = 0;
-	u32 imagesAllocated = 0;
 
 	u32 i = 0;
 	u32 j = 0;

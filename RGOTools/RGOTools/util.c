@@ -127,14 +127,12 @@ FILE* FOpenMustSucceed(const char* path, const char* mode)
  * Parameter: path - the path where the file names should be written. */
 void GeneratePSPImageFileList(void)
 {
-	const u32 startNum = 824;
-	const u32 endNum = 2539;
 	FILE* pFile = NULL;
 	u32 i = 0;
 
 	pFile = FOpenMustSucceed(PSP_IMAGES_FILE_LIST, "wb");
 
-	for (i = startNum; i <= endNum; ++i)
+	for (i = PSP_IMAGES_START_NUM; i <= PSP_IMAGES_END_NUM; ++i)
 	{
 		fprintf(pFile, "%s%u\n", PSP_IMAGES_DIRECTORY, i);
 	}
