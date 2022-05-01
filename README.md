@@ -24,7 +24,7 @@ To extract .cpk files, use CriPakTools: https://github.com/esperknight/CriPakToo
 ## Images
 
 The image files for the PSP version of Lucky Star: Ryouou Gakuen Outousai are contained within the following
-cpk file:
+.cpk file:
 
 PSP_GAME/USRDIR/DATA/union.cpk <br />
 
