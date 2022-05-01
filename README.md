@@ -32,6 +32,6 @@ and are the files 824 to 2539 in the archive.
 
 For the PS2 version, the image files are contained within the following .afs files:
 
-DATA/BK.AFS
-DATA/BU.AFS
-DATA/FC.AFS
+DATA/BK.AFS <br />
+DATA/BU.AFS <br />
+DATA/FC.AFS <br />
