@@ -18,16 +18,15 @@ formats and you will need special outside programs to extract the files containe
 as RGO Patching Tools does not support the extraction and repackaging of .afs or .cpk files,
 nor are there currently any plans to add such support.
 
-To extract .afs files, use AFSPacker:   https://github.com/MaikelChan/AFSPacker
-
-To extract .cpk files, use CriPakTools: https://github.com/esperknight/CriPakTools
+To extract .afs files, use AFSPacker:   https://github.com/MaikelChan/AFSPacker <br />
+To extract .cpk files, use CriPakTools: https://github.com/esperknight/CriPakTools <br />
 
 ## Images
 
 The image files for the PSP version of Lucky Star: Ryouou Gakuen Outousai are contained within the following
 cpk file:
 
-PSP_GAME/USRDIR/DATA/union.cpk
+PSP_GAME/USRDIR/DATA/union.cpk <br />
 
 and are the files 824 to 2539 in the archive.
 
