@@ -19,6 +19,7 @@ as RGO Patching Tools does not support the extraction and repackaging of .afs or
 nor are there currently any plans to add such support.
 
 To extract .afs files, use AFSPacker:   https://github.com/MaikelChan/AFSPacker
+
 To extract .cpk files, use CriPakTools: https://github.com/esperknight/CriPakTools
 
 ## Images
