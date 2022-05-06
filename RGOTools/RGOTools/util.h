@@ -33,6 +33,8 @@
 #define TRUE (!FALSE)
 
 #define NUM_ELEMENTS(x) (sizeof(x) / sizeof(x[0]))
+#define FOPEN_FAIL_MESSAGE(path) (printf("Could not open file %s", path))
+#define LOAD_FILE_FAIL_MESSAGE(path) (printf("Failed to load file %s", path))
 
 typedef unsigned char u8;
 typedef unsigned int u32;
@@ -44,17 +46,18 @@ typedef struct
 	u8* data;
 } Memory;
 
+/* Used to process newline-separated lists of file paths */
 typedef struct
 {
-	char** paths;
-	u32 nFiles;
-} FileList;
+	u32 memoryPos;
+	u8* currentPath;
+	Memory memory;
+} FilePathList;
 
 Memory LoadFile(const char* filePath);
-FileList InitFileList(Memory file);
+FilePathList InitFilePathList(Memory fileList);
+bool32 GetNextFilePath(FilePathList* pathList);
 u32 LittleEndianRead32(const u8* data);
-void* MallocMustSucceed(size_t size);
-FILE* FOpenMustSucceed(const char* path, const char* mode);
 void GeneratePSPImageFileList(void);
 void GeneratePS2ImageFileList(void);
 

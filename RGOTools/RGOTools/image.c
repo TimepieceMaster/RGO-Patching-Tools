@@ -17,17 +17,12 @@
  *  You should have received a copy of the GNU General Public License
  *  along with the RGO Patching Tools. If not, see <https://www.gnu.org/licenses/>. */
 
-/* Used to convert images from RGO's image format to .png files,
- * as well as convert .png files to images that can be used in RGO. */
-
 #include <stdio.h>
 #include <string.h>
 #include "util.h"
 #include "image.h"
 
-/* Determine the number of images in an RGO image archive file.
- * Parameter: imageData - a loaded in RGO image archive file.
- * Return: the number of images in the image archive file. */
+/* Determine the number of images in an RGO image archive file. */
 u32 GetNumImages(const Memory imageData)
 {
 	/* The easiest way to determine the number of images is to determine the
@@ -36,7 +31,6 @@ u32 GetNumImages(const Memory imageData)
 	const u32 maxPotentialPalettes = imageData.size / PALETTE_NUM_BYTES;
 	u32 nPalettes = 1; /* There's always at least 1 palette at the start of the file */
 
-	/* Look for palettes following the first one */
 	for (; nPalettes < maxPotentialPalettes; ++nPalettes)
 	{
 		/* Get what would be the first color in the palette */
@@ -70,13 +64,7 @@ u32 GetNumImages(const Memory imageData)
 	return nPalettes;
 }
 
-/* Get the specified palette.
- * Parameter: imageData - the RGO image archive file to get the palette from.
- * Parameter: paletteIndex - the palette to get access to.
- * Return: the address of the start of the palette. */
 u8* GetPalette(const Memory imageData, const u32 paletteIndex)
 {
-	/* No checking validity on paletteIndex. It's assumed you will
-	 * use GetNumImages to know how many palettes are available. */
 	return &imageData.data[paletteIndex * PALETTE_NUM_BYTES];
 }

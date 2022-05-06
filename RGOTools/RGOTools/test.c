@@ -17,93 +17,112 @@
  *  You should have received a copy of the GNU General Public License
  *  along with the RGO Patching Tools. If not, see <https://www.gnu.org/licenses/>. */
 
-
-/* Tests to verify correctness of the code. */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include "util.h"
 #include "image.h"
 #include "test.h"
 
-/* Runs all of the tests */
-void RunAllTests(void)
+void TestUtilLoadFile(const char* inputPath, const char* outputPath)
 {
-	TestUtilLoadFile(TEST_UTIL_LOAD_FILE_INPUT, TEST_UTIL_LOAD_FILE_OUTPUT, TEST_UTIL_LOAD_FILE_INVALID);
-}
+	FILE* outputFile = NULL;
+	Memory loadedFile = { 0 };
 
-/* Tests the correctness of LoadFile in util.c */
-void TestUtilLoadFile(const char* validPath, const char* writePath, const char* invalidPath)
-{
-	FILE* pWriteFile = NULL;
-	Memory file = { 0 };
-
-	printf("\nRunning the unit test for LoadFile from util.c\n");
-
-	printf("Copying the contents of %s to %s\n", validPath, writePath);
-	file = LoadFile(validPath);
-
-	pWriteFile = FOpenMustSucceed(writePath, "wb");
-	fwrite(file.data, file.size, 1, pWriteFile);
-	free(file.data);
-}
-
-/* Tests the correctness of InitFileList in util.c */
-void TestUtilInitFileList(const char* path, const char* writePath)
-{
-	FILE* pWriteFile = NULL;
-	Memory file = { 0 };
-	FileList fileList = { 0 };
-	u32 i = 0;
-
-	printf("\nRunning the unit test for InitFileList from util.c\n");
-
-	pWriteFile = FOpenMustSucceed(writePath, "wb");
-
-	file = LoadFile(path);
-	fileList = InitFileList(file);
-
-	for (i = 0; i < fileList.nFiles; ++i)
+	loadedFile = LoadFile(inputPath);
+	if (!loadedFile.data)
 	{
-		fprintf(pWriteFile, "%s\n", fileList.paths[i]);
+		LOAD_FILE_FAIL_MESSAGE(inputPath);
+		return;
 	}
-	fclose(pWriteFile);
-	free(fileList.paths);
-	free(file.data);
+
+	outputFile = fopen(outputPath, "wb");
+	if (!outputFile)
+	{
+		FOPEN_FAIL_MESSAGE(outputPath);
+		free(loadedFile.data);
+		return;
+	}
+	fwrite(loadedFile.data, loadedFile.size, 1, outputFile);
+	free(loadedFile.data);
+	fclose(outputFile);
 }
 
-void TestImageGetNumImages(const char* writePath)
+void TestUtilFilePathList(const char* inputPath, const char* outputPath)
 {
-	const char* fileListPaths[] = { PSP_IMAGES_FILE_LIST, PS2_IMAGES_FILE_LIST };
+	FILE* outputFile = NULL;
+	Memory loadedFile = { 0 };
+	FilePathList filePathList = { 0 };
 
-	FILE* pWriteFile = NULL;
+	loadedFile = LoadFile(inputPath);
+	if (!loadedFile.data)
+	{
+		LOAD_FILE_FAIL_MESSAGE(inputPath);
+		return;
+	}
+	filePathList = InitFilePathList(loadedFile);
 
-	Memory fileListMemory = { 0 };
-	FileList fileList = { 0 };
+	outputFile = fopen(outputPath, "wb");
+	if (!outputFile)
+	{
+		FOPEN_FAIL_MESSAGE(outputPath);
+		free(loadedFile.data);
+		return;
+	}
+
+	while (GetNextFilePath(&filePathList))
+	{
+		fprintf(outputFile, "%s\n", filePathList.currentPath);
+	}
+	free(loadedFile.data);
+	fclose(outputFile);
+}
+
+void TestImageGetNumImages(const char* outputPath)
+{
+	const char* filePathListFilePaths[2] = {PSP_IMAGES_FILE_LIST, PS2_IMAGES_FILE_LIST};
+	FILE* outputFile = NULL;
+
+	Memory filePathListMemory = { 0 };
+	FilePathList filePathList = { 0 };
 	Memory image = { 0 };
 	u32 nImages = 0;
 
 	u32 i = 0;
-	u32 j = 0;
 
-	printf("\nRunning the unit test for GetNumImages from image.c\n");
-
-	pWriteFile = FOpenMustSucceed(writePath, "wb");
+	outputFile = fopen(outputPath, "wb");
+	if (!outputFile)
+	{
+		FOPEN_FAIL_MESSAGE(outputPath);
+		return;
+	}
 
 	/* Get the number of palettes from each image */
-	for (i = 0; i < NUM_ELEMENTS(fileListPaths); ++i)
+	for (i = 0; i < NUM_ELEMENTS(filePathListFilePaths); ++i)
 	{
-		fileListMemory = LoadFile(fileListPaths[i]);
-		fileList = InitFileList(fileListMemory);
-
-		for (j = 0; j < fileList.nFiles; ++j)
+		filePathListMemory = LoadFile(filePathListFilePaths[i]);
+		if (!filePathListMemory.data)
 		{
-			image = LoadFile(fileList.paths[j]);
+			LOAD_FILE_FAIL_MESSAGE(filePathListFilePaths[i]);
+			fclose(outputFile);
+			return;
+		}
+		filePathList = InitFilePathList(filePathListMemory);
+
+		while (GetNextFilePath(&filePathList))
+		{
+			image = LoadFile(filePathList.currentPath);
+			if (!image.data)
+			{
+				LOAD_FILE_FAIL_MESSAGE(filePathList.currentPath);
+				free(filePathListMemory.data);
+				fclose(outputFile);
+				return;
+			}
 			nImages = GetNumImages(image);
-			fprintf(pWriteFile, "# images: %u. File: %s\n", nImages, fileList.paths[j]);
+			fprintf(outputFile, "# images: %u. File: %s\n", nImages, filePathList.currentPath);
 			free(image.data);
 		}
-		free(fileListMemory.data);
-		free(fileList.paths);
+		free(filePathListMemory.data);
 	}
+	fclose(outputFile);
 }

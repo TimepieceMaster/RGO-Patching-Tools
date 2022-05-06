@@ -17,16 +17,10 @@
  *  You should have received a copy of the GNU General Public License
  *  along with the RGO Patching Tools. If not, see <https://www.gnu.org/licenses/>. */
 
-#include <stdio.h>
 #include "test.h"
-#include "util.h"
 
 int main(void)
 {
 	TestImageGetNumImages(TEST_IMAGE_GET_NUM_IMAGES_OUTPUT);
-	//TestUtilInitFileList(TEST_UTIL_INIT_FILE_LIST_INPUT, TEST_UTIL_INIT_FILE_LIST_OUTPUT);
-	//RunAllTests();
-	//GeneratePSPImageFileList();
-	//GeneratePS2ImageFileList();
 	return 0;
 }
