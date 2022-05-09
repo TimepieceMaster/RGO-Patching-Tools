@@ -28,7 +28,7 @@ The image files for the PSP version of Lucky Star: Ryouou Gakuen Outousai are co
 
 PSP_GAME/USRDIR/DATA/union.cpk <br />
 
-and are the files 824 to 2539 in the archive.
+and are the files 824 to 2539 in the archive, except for files 2535 and 2537.
 
 For the PS2 version, the image files are contained within the following .afs files:
 
