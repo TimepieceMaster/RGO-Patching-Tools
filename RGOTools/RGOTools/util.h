@@ -36,6 +36,8 @@
 #define FOPEN_FAIL_MESSAGE(path) (printf("Could not open file %s", path))
 #define LOAD_FILE_FAIL_MESSAGE(path) (printf("Failed to load file %s", path))
 
+#define CHECKSUM_LENGTH 16
+
 typedef unsigned char u8;
 typedef unsigned int u32;
 typedef unsigned int bool32;
@@ -58,6 +60,7 @@ Memory LoadFile(const char* filePath);
 FilePathList InitFilePathList(Memory fileList);
 bool32 GetNextFilePath(FilePathList* pathList);
 u32 LittleEndianRead32(const u8* data);
+u32 BigEndianRead32(const u8* data);
 void GeneratePSPImageFileList(void);
 void GeneratePS2ImageFileList(void);
 

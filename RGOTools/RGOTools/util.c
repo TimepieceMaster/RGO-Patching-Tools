@@ -81,8 +81,11 @@ FilePathList InitFilePathList(Memory fileList)
 /* Set pathList.currentPath to point to the next path. Returns FALSE if there are no more. */
 bool32 GetNextFilePath(FilePathList *pathList)
 {
-	const u32 size = pathList->memory.size;
-	u8* data = pathList->memory.data;
+	u32 size = 0;
+	u8* data = NULL;
+
+	size = pathList->memory.size;
+	data = pathList->memory.data;
 
 	if (!pathList->currentPath) /* First path */
 	{
@@ -119,10 +122,21 @@ u32 LittleEndianRead32(const u8* data)
 	return data[0] + (data[1] << 8) + (data[2] << 16) + (data[3] << 24);
 }
 
+u32 BigEndianRead32(const u8* data)
+{
+	return (data[0] << 24) + (data[1] << 16) + (data[2] << 8) + data[3];
+}
+
 void GeneratePSPImageFileList(void)
 {
+	const u32 excludedImages[] =
+	{
+		2535, /* Is actually a PNG and not the RGO image archive file format */
+		2537  /* It has a checksum, but the actual data is just all zeroes. */
+	};
 	FILE* file = NULL;
 	u32 i = 0;
+	u32 j = 0;
 
 	file = fopen(PSP_IMAGES_FILE_LIST, "wb");
 	if (!file)
@@ -133,7 +147,15 @@ void GeneratePSPImageFileList(void)
 
 	for (i = PSP_IMAGES_START_NUM; i <= PSP_IMAGES_END_NUM; ++i)
 	{
+		for (j = 0; j < NUM_ELEMENTS(excludedImages); ++j)
+		{
+			if (i == excludedImages[j])
+			{
+				goto skipImage;
+			}
+		}
 		fprintf(file, "%s%u\n", PSP_IMAGES_DIRECTORY, i);
+	skipImage:/* Do nothing */;
 	}
 
 	fclose(file);

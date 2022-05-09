@@ -21,6 +21,6 @@
 
 int main(void)
 {
-	TestImageGetNumImages(TEST_IMAGE_GET_NUM_IMAGES_OUTPUT);
+	TestImageGetImageHeader(TEST_IMAGE_GET_IMAGE_HEADER_OUTPUT);
 	return 0;
 }

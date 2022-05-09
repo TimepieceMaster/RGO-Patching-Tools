@@ -85,7 +85,7 @@ void TestImageGetNumImages(const char* outputPath)
 	Memory filePathListMemory = { 0 };
 	FilePathList filePathList = { 0 };
 	Memory image = { 0 };
-	u32 nImages = 0;
+	NumImagesInfo numImagesInfo = { 0 };
 
 	u32 i = 0;
 
@@ -118,8 +118,66 @@ void TestImageGetNumImages(const char* outputPath)
 				fclose(outputFile);
 				return;
 			}
-			nImages = GetNumImages(image);
-			fprintf(outputFile, "# images: %u. File: %s\n", nImages, filePathList.currentPath);
+			numImagesInfo = GetNumImages(image);
+			fprintf(outputFile, "# images: %u. File: %s\n", numImagesInfo.nImages, filePathList.currentPath);
+			free(image.data);
+		}
+		free(filePathListMemory.data);
+	}
+	fclose(outputFile);
+}
+
+void TestImageGetImageHeader(const char* outputPath)
+{
+	const char* filePathListFilePaths[2] = { PSP_IMAGES_FILE_LIST, PS2_IMAGES_FILE_LIST };
+	FILE* outputFile = NULL;
+
+	Memory filePathListMemory = { 0 };
+	FilePathList filePathList = { 0 };
+	Memory image = { 0 };
+	NumImagesInfo numImagesInfo = { 0 };
+	u8* header = NULL;
+	u32 nSubfiles = 0;
+
+	u32 i = 0;
+	u32 j = 0;
+
+	outputFile = fopen(outputPath, "wb");
+	if (!outputFile)
+	{
+		FOPEN_FAIL_MESSAGE(outputPath);
+		return;
+	}
+
+	/* Get all image headers in every image and output the number of subFiles */
+	for (i = 0; i < NUM_ELEMENTS(filePathListFilePaths); ++i)
+	{
+		filePathListMemory = LoadFile(filePathListFilePaths[i]);
+		if (!filePathListMemory.data)
+		{
+			LOAD_FILE_FAIL_MESSAGE(filePathListFilePaths[i]);
+			fclose(outputFile);
+			return;
+		}
+		filePathList = InitFilePathList(filePathListMemory);
+
+		while (GetNextFilePath(&filePathList))
+		{
+			image = LoadFile(filePathList.currentPath);
+			if (!image.data)
+			{
+				LOAD_FILE_FAIL_MESSAGE(filePathList.currentPath);
+				free(filePathListMemory.data);
+				fclose(outputFile);
+				return;
+			}
+			numImagesInfo = GetNumImages(image);
+			for(j = 0; j < numImagesInfo.nImages; ++j)
+			{
+				header = GetImageHeader(image, numImagesInfo, j);
+				nSubfiles = LittleEndianRead32(header);
+				fprintf(outputFile, "Image %u/%u. # subfiles: %u. File: %s\n", j + 1, numImagesInfo.nImages, nSubfiles, filePathList.currentPath);
+			}
 			free(image.data);
 		}
 		free(filePathListMemory.data);
