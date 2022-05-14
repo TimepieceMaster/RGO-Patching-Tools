@@ -21,6 +21,10 @@ nor are there currently any plans to add such support.
 To extract .afs files, use AFSPacker:   https://github.com/MaikelChan/AFSPacker <br />
 To extract .cpk files, use CriPakTools: https://github.com/esperknight/CriPakTools <br />
 
+The RGO Patching Tools also have the following dependencies:
+
+zlib (https://zlib.net/). The source code for zlib should be placed in \RGOTools\RGOTools\OutsideCode\zlib <br />
+
 ## Images
 
 The image files for the PSP version of Lucky Star: Ryouou Gakuen Outousai are contained within the following
@@ -35,3 +39,7 @@ For the PS2 version, the image files are contained within the following .afs fil
 DATA/BK.AFS <br />
 DATA/BU.AFS <br />
 DATA/FC.AFS <br />
+DATA/SP.AFS <br />
+DATA/PT.AFS <br />
+
+The PS2 demo, RAvish Romance, is also supported. The image files are located in the same locations as in the final PS2 version.

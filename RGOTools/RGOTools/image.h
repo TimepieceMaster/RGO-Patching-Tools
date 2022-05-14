@@ -22,10 +22,6 @@
 
 #include "util.h"
 
-#define DEFAULT_PALETTE_NUM_BYTES 1024
-#define MAP_DATA_SIGNATURE_LITTLE_ENDIAN 0x0050414D /* In big endian, it would be "MAP" but this form is more convenient */
-#define DEFAULT_HEADER_OFFSET 0x1800
-
 typedef struct
 {
 	u32 nImages;
@@ -37,6 +33,7 @@ NumImagesInfo GetNumImages(Memory imageData);
 u8* GetPalette(u8* imageData, u32 index);
 u8* GetImageHeader(Memory imageData, NumImagesInfo numImagesInfo, u32 index);
 u8* GetNextImageHeader(u8* currentHeader);
-static u32 GetNumBytesToNextHeader(const u8* currentHeader, u32 nSubfiles);
+Platform GetImagePlatform(const u8* header);
+Memory DecompressImage(u8* header, Platform platform);
 
 #endif

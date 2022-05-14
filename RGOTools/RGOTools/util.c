@@ -28,6 +28,20 @@
 #include <Windows.h>
 #endif
 
+#define PSP_IMAGES_DIRECTORY "TestFiles/PSPImages/BIN/"
+#define PSP_IMAGES_START_NUM 824
+#define PSP_IMAGES_END_NUM 2539
+#define PS2_IMAGES_BK_DIRECTORY "TestFiles/PS2Images/BK/"
+#define PS2_IMAGES_BU_DIRECTORY "TestFiles/PS2Images/BU/"
+#define PS2_IMAGES_FC_DIRECTORY "TestFiles/PS2Images/FC/"
+#define PS2_IMAGES_SP_DIRECTORY "TestFiles/PS2Images/SP/"
+#define PS2_IMAGES_PT_DIRECTORY "TestFiles/PS2Images/PT/"
+#define PS2_IMAGES_RAVISH_BK_DIRECTORY "TestFiles/PS2Images/RAvishRomance/BK/"
+#define PS2_IMAGES_RAVISH_BU_DIRECTORY "TestFiles/PS2Images/RAvishRomance/BU/"
+#define PS2_IMAGES_RAVISH_FC_DIRECTORY "TestFiles/PS2Images/RAvishRomance/FC/"
+#define PS2_IMAGES_RAVISH_SP_DIRECTORY "TestFiles/PS2Images/RAvishRomance/SP/"
+#define PS2_IMAGES_RAVISH_PT_DIRECTORY "TestFiles/PS2Images/RAvishRomance/PT/"
+
 /* Loads the entirety of a file into dynamic memory. */
 Memory LoadFile(const char* filePath)
 {
@@ -122,11 +136,6 @@ u32 LittleEndianRead32(const u8* data)
 	return data[0] + (data[1] << 8) + (data[2] << 16) + (data[3] << 24);
 }
 
-u32 BigEndianRead32(const u8* data)
-{
-	return (data[0] << 24) + (data[1] << 16) + (data[2] << 8) + data[3];
-}
-
 void GeneratePSPImageFileList(void)
 {
 	const u32 excludedImages[] =
@@ -168,7 +177,14 @@ void GeneratePS2ImageFileList(void)
 	{
 		PS2_IMAGES_BK_DIRECTORY,
 		PS2_IMAGES_BU_DIRECTORY,
-		PS2_IMAGES_FC_DIRECTORY
+		PS2_IMAGES_FC_DIRECTORY,
+		PS2_IMAGES_SP_DIRECTORY,
+		PS2_IMAGES_PT_DIRECTORY,
+		PS2_IMAGES_RAVISH_BK_DIRECTORY,
+		PS2_IMAGES_RAVISH_BU_DIRECTORY,
+		PS2_IMAGES_RAVISH_FC_DIRECTORY,
+		PS2_IMAGES_RAVISH_SP_DIRECTORY,
+		PS2_IMAGES_RAVISH_PT_DIRECTORY
 	};
 
 	FILE* file = NULL;

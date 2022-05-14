@@ -22,12 +22,6 @@
 
 #define PSP_IMAGES_FILE_LIST "TestFiles/PSPImages/filelist.txt"
 #define PS2_IMAGES_FILE_LIST "TestFiles/PS2Images/filelist.txt"
-#define PSP_IMAGES_DIRECTORY "TestFiles/PSPImages/BIN/"
-#define PSP_IMAGES_START_NUM 824
-#define PSP_IMAGES_END_NUM 2539
-#define PS2_IMAGES_BK_DIRECTORY "TestFiles/PS2Images/BK/"
-#define PS2_IMAGES_BU_DIRECTORY "TestFiles/PS2Images/BU/"
-#define PS2_IMAGES_FC_DIRECTORY "TestFiles/PS2Images/FC/"
 
 #define FALSE 0
 #define TRUE (!FALSE)
@@ -37,6 +31,12 @@
 #define LOAD_FILE_FAIL_MESSAGE(path) (printf("Failed to load file %s", path))
 
 #define CHECKSUM_LENGTH 16
+
+typedef enum
+{
+	PLATFORM_PS2,
+	PLATFORM_PSP
+} Platform;
 
 typedef unsigned char u8;
 typedef unsigned int u32;
@@ -60,7 +60,6 @@ Memory LoadFile(const char* filePath);
 FilePathList InitFilePathList(Memory fileList);
 bool32 GetNextFilePath(FilePathList* pathList);
 u32 LittleEndianRead32(const u8* data);
-u32 BigEndianRead32(const u8* data);
 void GeneratePSPImageFileList(void);
 void GeneratePS2ImageFileList(void);
 
