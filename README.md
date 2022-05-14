@@ -23,7 +23,7 @@ To extract .cpk files, use CriPakTools: https://github.com/esperknight/CriPakToo
 
 The RGO Patching Tools also have the following dependencies:
 
-zlib (https://zlib.net/). The source code for zlib should be placed in \RGOTools\RGOTools\OutsideCode\zlib <br />
+zlib (https://zlib.net/). The source code for zlib should be placed in /RGOTools/RGOTools/OutsideCode/zlib <br />
 
 ## Images
 
