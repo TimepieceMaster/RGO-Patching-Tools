@@ -18,11 +18,10 @@
  *  along with the RGO Patching Tools. If not, see <https://www.gnu.org/licenses/>. */
 
 #include "test.h"
-
+#include "util.h"
 int main(void)
 {
-	TestImageDecompressAllImages(TEST_IMAGE_DECOMPRESS_ALL_IMAGES_OUTPUT);
-	TestImageDecompressSingleImage(TEST_IMAGE_DECOMPRESS_IMAGE_PS2_INPUT, TEST_IMAGE_DECOMPRESS_IMAGE_PS2_OUTPUT);
-	TestImageDecompressSingleImage(TEST_IMAGE_DECOMPRESS_IMAGE_PSP_INPUT, TEST_IMAGE_DECOMPRESS_IMAGE_PSP_OUTPUT);
+	GeneratePS2ImageFileList();
+	TestExtractAllImages();
 	return 0;
 }

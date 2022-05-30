@@ -19,6 +19,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "util.h"
 #include "image.h"
 #include "test.h"
@@ -249,8 +250,6 @@ void TestImageDecompressAllImages(const char* outputPath)
 	u8* currentHeader = NULL;
 	Platform imagePlatform = 0;
 	Memory decompressedImage = { 0 };
-	u8* header = NULL;
-	u32 nSubfiles = 0;
 
 	u32 i = 0;
 	u32 j = 0;
@@ -313,4 +312,59 @@ void TestImageDecompressAllImages(const char* outputPath)
 	}
 	fclose(outputFile);
 	return;
+}
+
+void TestExtractAllImages(void)
+{
+	const char* filePathListFilePaths[2] = { PSP_IMAGES_FILE_LIST, PS2_IMAGES_FILE_LIST };
+	char outputPath[1024] = { 0 };
+	char filename[1024] = { 0 };
+	Memory filePathListMemory = { 0 };
+	FilePathList filePathList = { 0 };
+	char* fileNameStart = 0;
+	u32 fileNameLength = 0;
+	char* lastOccurance = NULL;
+	u32 i = 0;
+
+	for (i = 0; i < NUM_ELEMENTS(filePathListFilePaths); ++i)
+	{
+		filePathListMemory = LoadFile(filePathListFilePaths[i]);
+		if (!filePathListMemory.data)
+		{
+			LOAD_FILE_FAIL_MESSAGE(filePathListFilePaths[i]);
+			return;
+		}
+		filePathList = InitFilePathList(filePathListMemory);
+
+		while (GetNextFilePath(&filePathList))
+		{
+			lastOccurance = strrchr(filePathList.currentPath, '/');
+			if (!lastOccurance)
+			{
+				fileNameStart = filePathList.currentPath;
+			}
+			else
+			{
+				fileNameStart = lastOccurance + 1;
+			}
+			lastOccurance = strrchr(filePathList.currentPath, '.');
+			if (!lastOccurance)
+			{
+				fileNameLength = strlen(fileNameStart);
+			}
+			else
+			{
+				fileNameLength = lastOccurance - fileNameStart;
+			}
+			memcpy(filename, fileNameStart, fileNameLength);
+			filename[fileNameLength] = '\0';
+			strcat(filename, ".png");
+
+			sprintf(outputPath, "TestFiles/Results/ExtractedImages/");
+			strcat(outputPath, filename);
+
+			printf("%s\n", filePathList.currentPath);
+			ConvertRGOImageToPNGAll(filePathList.currentPath, outputPath);
+		}
+	}
 }

@@ -144,6 +144,21 @@
   <ItemGroup>
     <ClCompile Include="image.c" />
     <ClCompile Include="main.c" />
+    <ClCompile Include="OutsideCode\libpng\png.c" />
+    <ClCompile Include="OutsideCode\libpng\pngerror.c" />
+    <ClCompile Include="OutsideCode\libpng\pngget.c" />
+    <ClCompile Include="OutsideCode\libpng\pngmem.c" />
+    <ClCompile Include="OutsideCode\libpng\pngpread.c" />
+    <ClCompile Include="OutsideCode\libpng\pngread.c" />
+    <ClCompile Include="OutsideCode\libpng\pngrio.c" />
+    <ClCompile Include="OutsideCode\libpng\pngrtran.c" />
+    <ClCompile Include="OutsideCode\libpng\pngrutil.c" />
+    <ClCompile Include="OutsideCode\libpng\pngset.c" />
+    <ClCompile Include="OutsideCode\libpng\pngtrans.c" />
+    <ClCompile Include="OutsideCode\libpng\pngwio.c" />
+    <ClCompile Include="OutsideCode\libpng\pngwrite.c" />
+    <ClCompile Include="OutsideCode\libpng\pngwtran.c" />
+    <ClCompile Include="OutsideCode\libpng\pngwutil.c" />
     <ClCompile Include="OutsideCode\zlib\adler32.c" />
     <ClCompile Include="OutsideCode\zlib\compress.c" />
     <ClCompile Include="OutsideCode\zlib\crc32.c" />
@@ -161,17 +176,14 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="image.h" />
-    <ClInclude Include="OutsideCode\zlib\crc32.h" />
-    <ClInclude Include="OutsideCode\zlib\deflate.h" />
-    <ClInclude Include="OutsideCode\zlib\gzguts.h" />
-    <ClInclude Include="OutsideCode\zlib\inffast.h" />
-    <ClInclude Include="OutsideCode\zlib\inffixed.h" />
-    <ClInclude Include="OutsideCode\zlib\inflate.h" />
-    <ClInclude Include="OutsideCode\zlib\inftrees.h" />
-    <ClInclude Include="OutsideCode\zlib\trees.h" />
-    <ClInclude Include="OutsideCode\zlib\zconf.h" />
+    <ClInclude Include="OutsideCode\libpng\png.h" />
+    <ClInclude Include="OutsideCode\libpng\pngconf.h" />
+    <ClInclude Include="OutsideCode\libpng\pngdebug.h" />
+    <ClInclude Include="OutsideCode\libpng\pnginfo.h" />
+    <ClInclude Include="OutsideCode\libpng\pnglibconf.h" />
+    <ClInclude Include="OutsideCode\libpng\pngpriv.h" />
+    <ClInclude Include="OutsideCode\libpng\pngstruct.h" />
     <ClInclude Include="OutsideCode\zlib\zlib.h" />
-    <ClInclude Include="OutsideCode\zlib\zutil.h" />
     <ClInclude Include="PS2Decompress.h" />
     <ClInclude Include="test.h" />
     <ClInclude Include="util.h" />

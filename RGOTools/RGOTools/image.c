@@ -21,16 +21,24 @@
 #include <string.h>
 #include <stdlib.h>
 #include "OutsideCode/zlib/zlib.h"
+#include "OutsideCode/libpng/png.h"
 #include "util.h"
 #include "image.h"
-#include "PS2Decompress.h"
 
 #define DEFAULT_PALETTE_NUM_BYTES 1024
 #define MAP_DATA_SIGNATURE_LITTLE_ENDIAN 0x0050414D /* In big endian, it would be "MAP" but this form is more convenient */
 #define DEFAULT_HEADER_OFFSET 0x1800
+#define TILE_WIDTH 16
+#define TILE_HEIGHT 8
+#define TILE_SIZE (TILE_WIDTH * TILE_HEIGHT)
+#define PSP_IMAGE_WIDTH 512
+#define PS2_IMAGE_WIDTH 640
+#define TILES_PER_ROW (PSP_IMAGE_WIDTH / TILE_WIDTH)
+#define TILE_ROW_SIZE (PSP_IMAGE_WIDTH * TILE_HEIGHT)
 
 static u32 GetNumBytesToNextHeader(const u8* currentHeader, u32 nSubfiles);
 static bool32 DecompressPSPSubimage(u8* src, u32 srcSize, u8* dst, u32 dstSize);
+static void DecompressPS2Subimage(u8* src, u8* dst, u32 numBytesToDecompress);
 
 /* Determine the number of images in an RGO image archive file. */
 NumImagesInfo GetNumImages(const Memory imageData)
@@ -266,8 +274,8 @@ Memory DecompressImage(u8* header, Platform platform)
 		 * the PS2 version uses a custom algorithm */
 		if (platform == PLATFORM_PS2)
 		{
-			compressedDataInPtr = &header[currentHeaderSubfileOffset];
-			DecompressPS2Subimage(compressedDataInPtr, compressedSize, decompressedDataOutPtr, decompressedSize);
+			compressedDataInPtr = &header[currentHeaderSubfileOffset + 4];
+			DecompressPS2Subimage(compressedDataInPtr, decompressedDataOutPtr, decompressedSize);
 		}
 		else
 		{
@@ -309,4 +317,314 @@ static bool32 DecompressPSPSubimage(u8* src, u32 srcSize, u8* dst, u32 dstSize)
 	}
 
 	return TRUE;
+}
+
+static void DecompressPS2Subimage(u8* src, u8* dst, u32 numBytesToDecompress)
+{
+	u8 circularBuf[0x1000] = { 0 };
+	u32 bufPos = 0xFEE;
+	u32 backReferenceLength = 0;
+	u32 backReferenceOffset = 0;
+	u32 encodingTypeBitField = 0;
+	u32 i = 0;
+	while (numBytesToDecompress != 0)
+	{
+		encodingTypeBitField >>= 1;
+		if (!(encodingTypeBitField & 0x100))
+		{
+			/* Get encoding information on the next 8 sections, one bit per section.
+			 * One means the next byte is read in directly.
+			 * Zero means the next group of bytes is taken from the circular buffer.
+			 * The circular buffer contains the last 4 kilobytes of uncompressed data.
+			 * that have been read in. */
+			encodingTypeBitField = *src | 0xFF00;
+			++src;
+		}
+		if (encodingTypeBitField & 0x1)
+		{
+			circularBuf[bufPos] = *src;
+			*dst = *src;
+			bufPos = (bufPos + 1) & 0xFFF;
+			++src;
+			++dst;
+			--numBytesToDecompress;
+		}
+		else
+		{
+			backReferenceLength = (src[1] & 0xF) + 3; /* Back-reference must be at least 3 bytes long */
+			backReferenceOffset = *src | ((src[1] & 0xF0) << 4);
+			src += 2;
+			for (i = 0; i < backReferenceLength; ++i)
+			{
+				circularBuf[bufPos] = circularBuf[(backReferenceOffset + i) & 0xFFF];
+				*dst = circularBuf[((backReferenceOffset + i) & 0xFFF)];
+				bufPos = (bufPos + 1) & 0xFFF;
+				++dst;
+			}
+			numBytesToDecompress -= backReferenceLength;
+		}
+	}
+}
+
+/* On PSP, the pixels in an image aren't given in linear order, but instead are
+ * grouped into 16 x 8 tiles. */
+Memory TiledToLinear(Memory tiledImage)
+{
+	u32 currentRowInTile = 0;
+	u32 currentTileInRow = 0;
+	u8* src = NULL;
+	u8* dst = NULL;
+	Memory ret = { 0 };
+
+	u32 i = 0;
+
+	ret.data = malloc(tiledImage.size);
+	if (!ret.data)
+	{
+		return ret;
+	}
+	ret.size = tiledImage.size;
+
+	src = tiledImage.data;
+	dst = ret.data;
+	for (i = 0; i < tiledImage.size / TILE_WIDTH; ++i)
+	{
+		memcpy(dst, src, TILE_WIDTH);
+		++currentTileInRow;
+		src += TILE_SIZE;
+		dst += TILE_WIDTH;
+		if (currentTileInRow == TILES_PER_ROW)
+		{
+			src -= TILE_ROW_SIZE;
+			src += TILE_WIDTH;
+			currentTileInRow = 0;
+			++currentRowInTile;
+			if (currentRowInTile == TILE_HEIGHT)
+			{
+				src -= TILE_SIZE;
+				src += TILE_ROW_SIZE;
+				currentRowInTile = 0;
+			}
+		}
+	}
+	return ret;
+}
+
+/* On PS2, the palette is not given in order, and instead
+ * are grouped into 32-color groups where colors 8-15 and 16-24
+ * are swapped. Additionally alpha ranges from 0x0 to 0x80, so
+* it needs to be converted to range from 0x0 + 0xFF */
+void CorrectPS2Palette(u32* palette, u32 nColors)
+{
+	const u32 colorGroupSize = 32;
+	const u32 colorGroupNumBytes = 32 * 4;
+	u32 i = 0;
+	u32 temp[32] = { 0 };
+	for (i = 0; i < nColors / colorGroupSize; ++i)
+	{
+		memcpy(temp, &palette[i * 32 + 16], 32);
+		memcpy(&palette[i * 32 + 16], &palette[i * 32 + 8], 32);
+		memcpy(&palette[i * 32 + 8], temp, 32);
+	}
+	if (nColors % (colorGroupSize) >= 24)
+	{
+		memcpy(temp, &palette[i * 32 + 16], 32);
+		memcpy(&palette[i * 32 + 16], &palette[i * 32 + 8], 32);
+		memcpy(&palette[i * 32 + 8], temp, 32);
+	}
+	for (i = 0; i < nColors; ++i)
+	{
+		if (palette[i] & 0x80000000)
+		{
+			palette[i] |= 0xFF000000;
+		}
+		else
+		{
+			palette[i] += palette[i] & 0xFF000000;
+		}
+	}
+}
+
+bool32 WriteToPNG(Memory decompressedImage, u32* palette, u32 width, u32 height, const char* outputPath)
+{
+	FILE* outputFile = NULL;
+	png_structp pngWritePtr = NULL;
+	png_infop pngInfoPtr = NULL;
+	u8** rowPointers = NULL;
+
+	u32* finalImageData = NULL;
+	u32 i = 0;
+
+	/* setup output file, memory, and libpng */
+	outputFile = fopen(outputPath, "wb");
+	if (!outputFile)
+	{
+		return FALSE;
+	}
+	finalImageData = malloc(decompressedImage.size * 4);
+	if (!finalImageData)
+	{
+		fclose(outputFile);
+		return FALSE;
+	}
+	rowPointers = malloc(sizeof(u8*) * height);
+	if (!rowPointers)
+	{
+		fclose(outputFile);
+		free(finalImageData);
+		return FALSE;
+	}
+	pngWritePtr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+	if (!pngWritePtr)
+	{
+		fclose(outputFile);
+		free(finalImageData);
+		free(rowPointers);
+		return FALSE;
+	}
+	pngInfoPtr = png_create_info_struct(pngWritePtr);
+	if (!pngInfoPtr)
+	{
+		fclose(outputFile);
+		free(finalImageData);
+		free(rowPointers);
+		png_destroy_write_struct(&pngWritePtr, NULL);
+		return FALSE;
+	}
+	if (setjmp(png_jmpbuf(pngWritePtr)))
+	{
+		fclose(outputFile);
+		free(finalImageData);
+		free(rowPointers);
+		png_destroy_write_struct(&pngWritePtr, &pngInfoPtr);
+		return FALSE;
+	}
+	png_init_io(pngWritePtr, outputFile);
+	png_set_IHDR(pngWritePtr, pngInfoPtr, width, height, 8, PNG_COLOR_TYPE_RGBA, PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
+	png_write_info(pngWritePtr, pngInfoPtr);
+
+	/* Prepare image data for writing as PNG and then write to the PNG */
+	for (i = 0; i < decompressedImage.size; ++i)
+	{
+		finalImageData[i] = palette[decompressedImage.data[i]];
+	}
+	for (i = 0; i < height; ++i)
+	{
+		rowPointers[i] = (u8*)(&finalImageData[width * i]);
+	}
+	png_write_image(pngWritePtr, rowPointers);
+	png_write_end(pngWritePtr, NULL);
+
+	/* Cleanup */
+	fclose(outputFile);
+	free(finalImageData);
+	free(rowPointers);
+	png_destroy_write_struct(&pngWritePtr, &pngInfoPtr);
+	return TRUE;
+}
+
+bool32 ConvertRGOImageToPNG(Memory image, NumImagesInfo numImagesInfo, u8* header, u32 imageIndex, const char* imageOutputPath)
+{
+	u32* palette = NULL;
+	Platform platform = 0;
+	Memory decompressedImage = { 0 };
+	Memory untiledImage = { 0 };
+	u32 width = 0;
+	u32 height = 0;
+
+	palette = (u32*)GetPalette(image.data, imageIndex);
+	platform = GetImagePlatform(header);
+	decompressedImage = DecompressImage(header, platform);
+	if (!decompressedImage.data)
+	{
+		return FALSE;
+	}
+	if (platform == PLATFORM_PS2)
+	{
+		if ((numImagesInfo.nImages - 1) == imageIndex)
+		{
+			CorrectPS2Palette(palette, numImagesInfo.lastPaletteSize / 4);
+		}
+		else
+		{
+			CorrectPS2Palette(palette, DEFAULT_PALETTE_NUM_BYTES / 4);
+		}
+		width = PS2_IMAGE_WIDTH;
+	}
+	else if (platform == PLATFORM_PSP)
+	{
+		untiledImage = TiledToLinear(decompressedImage);
+		if (!untiledImage.data)
+		{
+			free(decompressedImage.data);
+			return FALSE;
+		}
+		free(decompressedImage.data);
+		decompressedImage = untiledImage;
+
+		width = PSP_IMAGE_WIDTH;
+	}
+	height = decompressedImage.size / width;
+	if (!WriteToPNG(decompressedImage, palette, width, height, imageOutputPath))
+	{
+		free(decompressedImage.data);
+		return FALSE;
+	}
+
+	free(decompressedImage.data);
+	return TRUE;
+}
+
+void ConvertRGOImageToPNGAll(const char* inputPath, const char* outputPath)
+{
+	Memory image = { 0 };
+	NumImagesInfo numImagesInfo = { 0 };
+	u8* header = NULL;
+	u32 i = 0;
+	char* outputPathMultipleFiles = NULL;
+	u32 appendLocation = 0;
+	char* appendPtr = NULL;
+
+	image = LoadFile(inputPath);
+	if (!image.data)
+	{
+		return;
+	}
+	numImagesInfo = GetNumImages(image);
+	header = GetImageHeader(image, numImagesInfo, 0);
+	if (!ConvertRGOImageToPNG(image, numImagesInfo, header, 0, outputPath))
+	{
+		printf("Failed to extract image 0 in %s\n", inputPath);
+	}
+	if (numImagesInfo.nImages > 1)
+	{
+		outputPathMultipleFiles = malloc(strlen(outputPath) + 256); /* Just something reasonably big enough */
+		if (!outputPathMultipleFiles)
+		{
+			free(image.data);
+			return;
+		}
+		appendPtr = strrchr(outputPath, '.');
+		if (!appendPtr)
+		{
+			appendLocation = (u32)strlen(outputPath);
+		}
+		else
+		{
+			appendLocation = (u32)(appendPtr - outputPath);
+		}
+		memcpy(outputPathMultipleFiles, outputPath, appendLocation);
+	}
+	for (i = 1; i < numImagesInfo.nImages; ++i)
+	{
+		sprintf(&outputPathMultipleFiles[appendLocation], "_%u", i);
+		strcat(outputPathMultipleFiles, &outputPath[appendLocation]);
+		header = GetNextImageHeader(header);
+		if (!ConvertRGOImageToPNG(image, numImagesInfo, header, i, outputPathMultipleFiles))
+		{
+			printf("Failed to extract image %u in %s\n", i, inputPath);
+		}
+	}
+	free(image.data);
+	free(outputPathMultipleFiles);
 }

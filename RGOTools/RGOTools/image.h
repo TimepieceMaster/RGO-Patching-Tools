@@ -35,5 +35,10 @@ u8* GetImageHeader(Memory imageData, NumImagesInfo numImagesInfo, u32 index);
 u8* GetNextImageHeader(u8* currentHeader);
 Platform GetImagePlatform(const u8* header);
 Memory DecompressImage(u8* header, Platform platform);
+bool32 WriteToPNG(Memory decompressedImage, u32* palette, u32 width, u32 height, const char* outputPath);
+Memory TiledToLinear(Memory tiledImage);
+void CorrectPS2Palette(u32* palette, u32 nColors);
+bool32 ConvertRGOImageToPNG(Memory image, NumImagesInfo numImagesInfo, u8* header, u32 imageIndex, const char* imageOutputPath);
+void ConvertRGOImageToPNGAll(const char* inputPath, const char* outputPath);
 
 #endif
