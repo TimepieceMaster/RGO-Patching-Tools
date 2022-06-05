@@ -325,6 +325,7 @@ static void DecompressPS2Subimage(u8* src, u8* dst, u32 numBytesToDecompress)
 	u32 bufPos = 0xFEE;
 	u32 backReferenceLength = 0;
 	u32 backReferenceOffset = 0;
+	u32 currentBackReferenceByte = 0;
 	u32 encodingTypeBitField = 0;
 	u32 i = 0;
 	while (numBytesToDecompress != 0)
@@ -356,8 +357,9 @@ static void DecompressPS2Subimage(u8* src, u8* dst, u32 numBytesToDecompress)
 			src += 2;
 			for (i = 0; i < backReferenceLength; ++i)
 			{
-				circularBuf[bufPos] = circularBuf[(backReferenceOffset + i) & 0xFFF];
-				*dst = circularBuf[((backReferenceOffset + i) & 0xFFF)];
+				currentBackReferenceByte = circularBuf[(backReferenceOffset + i) & 0xFFF];
+				circularBuf[bufPos] = currentBackReferenceByte;
+				*dst = currentBackReferenceByte;
 				bufPos = (bufPos + 1) & 0xFFF;
 				++dst;
 			}
@@ -588,6 +590,7 @@ void ConvertRGOImageToPNGAll(const char* inputPath, const char* outputPath)
 	image = LoadFile(inputPath);
 	if (!image.data)
 	{
+		LOAD_FILE_FAIL_MESSAGE(inputPath);
 		return;
 	}
 	numImagesInfo = GetNumImages(image);

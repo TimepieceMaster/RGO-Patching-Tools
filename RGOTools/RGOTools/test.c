@@ -204,7 +204,8 @@ void TestImageDecompressSingleImage(const char* inputPath, const char* outputPat
 	image = LoadFile(inputPath);
 	if (!image.data)
 	{
-		goto errorLoadFile;
+		fclose(outputFile);
+		return;
 	}
 
 	numImagesInfo = GetNumImages(image);
@@ -213,7 +214,10 @@ void TestImageDecompressSingleImage(const char* inputPath, const char* outputPat
 	decompressedImage = DecompressImage(currentHeader, imagePlatform);
 	if (!decompressedImage.data)
 	{
-		goto errorDecompressImage;
+		free(image.data);
+		fclose(outputFile);
+		return;
+
 	}
 	fwrite(decompressedImage.data, decompressedImage.size, 1, outputFile);
 	free(decompressedImage.data);
@@ -224,16 +228,13 @@ void TestImageDecompressSingleImage(const char* inputPath, const char* outputPat
 		decompressedImage = DecompressImage(currentHeader, imagePlatform);
 		if (!decompressedImage.data)
 		{
-			goto errorDecompressImage;
+			free(image.data);
+			fclose(outputFile);
+			return;
 		}
 		fwrite(decompressedImage.data, decompressedImage.size, 1, outputFile);
 		free(decompressedImage.data);
 	}
-
-errorDecompressImage:
-	free(image.data);
-errorLoadFile:
-	fclose(outputFile);
 }
 
 /* This test is just to make sure DecompressImage doesn't crash or fail to decompress on any image.
@@ -322,8 +323,8 @@ void TestExtractAllImages(void)
 	Memory filePathListMemory = { 0 };
 	FilePathList filePathList = { 0 };
 	char* fileNameStart = 0;
-	u32 fileNameLength = 0;
-	char* lastOccurance = NULL;
+	size_t fileNameLength = 0;
+	char* foundChr = NULL;
 	u32 i = 0;
 
 	for (i = 0; i < NUM_ELEMENTS(filePathListFilePaths); ++i)
@@ -338,23 +339,23 @@ void TestExtractAllImages(void)
 
 		while (GetNextFilePath(&filePathList))
 		{
-			lastOccurance = strrchr(filePathList.currentPath, '/');
-			if (!lastOccurance)
+			foundChr = strchr(filePathList.currentPath, '/');
+			if (!foundChr)
 			{
 				fileNameStart = filePathList.currentPath;
 			}
 			else
 			{
-				fileNameStart = lastOccurance + 1;
+				fileNameStart = foundChr + 1;
 			}
-			lastOccurance = strrchr(filePathList.currentPath, '.');
-			if (!lastOccurance)
+			foundChr = strrchr(filePathList.currentPath, '.');
+			if (!foundChr)
 			{
 				fileNameLength = strlen(fileNameStart);
 			}
 			else
 			{
-				fileNameLength = lastOccurance - fileNameStart;
+				fileNameLength = foundChr - fileNameStart;
 			}
 			memcpy(filename, fileNameStart, fileNameLength);
 			filename[fileNameLength] = '\0';

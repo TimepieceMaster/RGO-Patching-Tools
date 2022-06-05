@@ -66,9 +66,6 @@
     <ClCompile Include="OutsideCode\zlib\zutil.c">
       <Filter>zlib</Filter>
     </ClCompile>
-    <ClCompile Include="PS2Decompress.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="OutsideCode\libpng\png.c">
       <Filter>libpng</Filter>
     </ClCompile>
@@ -127,9 +124,6 @@
     </ClInclude>
     <ClInclude Include="OutsideCode\zlib\zlib.h">
       <Filter>zlib</Filter>
-    </ClInclude>
-    <ClInclude Include="PS2Decompress.h">
-      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="OutsideCode\libpng\png.h">
       <Filter>libpng</Filter>

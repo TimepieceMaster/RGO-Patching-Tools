@@ -170,7 +170,6 @@
     <ClCompile Include="OutsideCode\zlib\trees.c" />
     <ClCompile Include="OutsideCode\zlib\uncompr.c" />
     <ClCompile Include="OutsideCode\zlib\zutil.c" />
-    <ClCompile Include="PS2Decompress.c" />
     <ClCompile Include="test.c" />
     <ClCompile Include="util.c" />
   </ItemGroup>
@@ -184,7 +183,6 @@
     <ClInclude Include="OutsideCode\libpng\pngpriv.h" />
     <ClInclude Include="OutsideCode\libpng\pngstruct.h" />
     <ClInclude Include="OutsideCode\zlib\zlib.h" />
-    <ClInclude Include="PS2Decompress.h" />
     <ClInclude Include="test.h" />
     <ClInclude Include="util.h" />
   </ItemGroup>

@@ -54,7 +54,8 @@ Memory LoadFile(const char* filePath)
 	if (!file)
 	{
 		FOPEN_FAIL_MESSAGE(filePath);
-		goto errorFOpen;
+		ret.data = NULL;
+		return ret;
 	}
 
 	/* Get file size */
@@ -67,19 +68,15 @@ Memory LoadFile(const char* filePath)
 	data = malloc(fileSize);
 	if (!data)
 	{
-		goto errorMalloc;
+		fclose(file);
+		ret.data = NULL;
+		return ret;
 	}
 	fread(data, fileSize, 1, file);
 	ret.data = data;
 	ret.size = fileSize;
 
 	fclose(file);
-	return ret;
-
-errorMalloc:
-	fclose(file);
-errorFOpen:
-	ret.data = NULL;
 	return ret;
 }
 

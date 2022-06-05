@@ -19,9 +19,9 @@
 
 #include "test.h"
 #include "util.h"
+
 int main(void)
 {
-	GeneratePS2ImageFileList();
 	TestExtractAllImages();
 	return 0;
 }
