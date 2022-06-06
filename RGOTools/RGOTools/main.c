@@ -18,7 +18,6 @@
  *  along with the RGO Patching Tools. If not, see <https://www.gnu.org/licenses/>. */
 
 #include "test.h"
-#include "util.h"
 
 int main(void)
 {

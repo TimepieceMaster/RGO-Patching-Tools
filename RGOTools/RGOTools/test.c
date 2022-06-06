@@ -120,7 +120,7 @@ void TestImageGetNumImages(const char* outputPath)
 				return;
 			}
 			numImagesInfo = GetNumImages(image);
-			fprintf(outputFile, "# images: %u. File: %s\n", numImagesInfo.nImages, filePathList.currentPath);
+			fprintf(outputFile, "# images: %u. Has MAP Data: %u. File: %s\n", numImagesInfo.nImages, numImagesInfo.hasMAPData, filePathList.currentPath);
 			free(image.data);
 		}
 		free(filePathListMemory.data);
@@ -317,55 +317,104 @@ void TestImageDecompressAllImages(const char* outputPath)
 
 void TestExtractAllImages(void)
 {
-	const char* filePathListFilePaths[2] = { PSP_IMAGES_FILE_LIST, PS2_IMAGES_FILE_LIST };
 	char outputPath[1024] = { 0 };
-	char filename[1024] = { 0 };
 	Memory filePathListMemory = { 0 };
 	FilePathList filePathList = { 0 };
-	char* fileNameStart = 0;
-	size_t fileNameLength = 0;
-	char* foundChr = NULL;
+	u32 nImages = 0;
+	u32* imageWidths = NULL;
 	u32 i = 0;
 
-	for (i = 0; i < NUM_ELEMENTS(filePathListFilePaths); ++i)
+	filePathListMemory = LoadFile(TEST_IMAGE_EXTRACT_ALL_IMAGES_STANDARD_WIDTH_FILE_LIST);
+	if (!filePathListMemory.data)
 	{
-		filePathListMemory = LoadFile(filePathListFilePaths[i]);
-		if (!filePathListMemory.data)
+		LOAD_FILE_FAIL_MESSAGE(TEST_IMAGE_EXTRACT_ALL_IMAGES_STANDARD_WIDTH_FILE_LIST);
+		return;
+	}
+	filePathList = InitFilePathList(filePathListMemory);
+
+	while (GetNextFilePath(&filePathList))
+	{
+		printf("%s\n", filePathList.currentPath);
+		GenerateExtractAllImagesOutputPath(filePathList.currentPath, outputPath);
+		ConvertRGOImageToPNGAll(filePathList.currentPath, outputPath, 0);
+	}
+	free(filePathListMemory.data);
+
+	filePathListMemory = LoadFile(TEST_IMAGE_EXTRACT_ALL_IMAGES_NONSTANDARD_WIDTH_FILE_LIST);
+	if (!filePathListMemory.data)
+	{
+		LOAD_FILE_FAIL_MESSAGE(TEST_IMAGE_EXTRACT_ALL_IMAGES_NONSTANDARD_WIDTH_FILE_LIST);
+		return;
+	}
+	filePathList = InitFilePathList(filePathListMemory);
+	filePathList.currentPath = filePathListMemory.data;
+	while (filePathList.memoryPos < filePathListMemory.size)
+	{
+		for (; filePathListMemory.data[filePathList.memoryPos] != ' '; ++filePathList.memoryPos);
+		filePathListMemory.data[filePathList.memoryPos] = '\0';
+		++filePathList.memoryPos;
+
+		sscanf(&filePathListMemory.data[filePathList.memoryPos], "%u", &nImages);
+		imageWidths = malloc(sizeof(u32) * nImages);
+		if (!imageWidths)
 		{
-			LOAD_FILE_FAIL_MESSAGE(filePathListFilePaths[i]);
+			free(filePathListMemory.data);
 			return;
 		}
-		filePathList = InitFilePathList(filePathListMemory);
+		for (; filePathListMemory.data[filePathList.memoryPos] != ' '; ++filePathList.memoryPos);
+		++filePathList.memoryPos;
 
-		while (GetNextFilePath(&filePathList))
+		for (i = 0; i < nImages; ++i)
 		{
-			foundChr = strchr(filePathList.currentPath, '/');
-			if (!foundChr)
+			sscanf(&filePathListMemory.data[filePathList.memoryPos], "%u", &imageWidths[i]);
+			if (i < nImages - 1)
 			{
-				fileNameStart = filePathList.currentPath;
+				for (; filePathListMemory.data[filePathList.memoryPos] != ' '; ++filePathList.memoryPos);
+				++filePathList.memoryPos;
 			}
-			else
-			{
-				fileNameStart = foundChr + 1;
-			}
-			foundChr = strrchr(filePathList.currentPath, '.');
-			if (!foundChr)
-			{
-				fileNameLength = strlen(fileNameStart);
-			}
-			else
-			{
-				fileNameLength = foundChr - fileNameStart;
-			}
-			memcpy(filename, fileNameStart, fileNameLength);
-			filename[fileNameLength] = '\0';
-			strcat(filename, ".png");
-
-			sprintf(outputPath, "TestFiles/Results/ExtractedImages/");
-			strcat(outputPath, filename);
-
-			printf("%s\n", filePathList.currentPath);
-			ConvertRGOImageToPNGAll(filePathList.currentPath, outputPath);
 		}
+
+		printf("%s\n", filePathList.currentPath);
+		GenerateExtractAllImagesOutputPath(filePathList.currentPath, outputPath);
+		ConvertRGOImageToPNGAll(filePathList.currentPath, outputPath, imageWidths);
+		free(imageWidths);
+
+		for (; filePathListMemory.data[filePathList.memoryPos] != '\n'; ++filePathList.memoryPos);
+		++filePathList.memoryPos;
+		filePathList.currentPath = &filePathListMemory.data[filePathList.memoryPos];
 	}
+	free(filePathListMemory.data);
+}
+
+void GenerateExtractAllImagesOutputPath(const char* inputPath, char* outputPath)
+{
+	const char* fileNameStart = 0;
+	size_t fileNameLength = 0;
+	char* foundChr = NULL;
+	char filename[1024] = { 0 };
+
+	foundChr = strchr(inputPath, '/');
+	if (!foundChr)
+	{
+		fileNameStart = inputPath;
+	}
+	else
+	{
+		fileNameStart = foundChr + 1;
+	}
+	foundChr = strrchr(inputPath, '.');
+	if (!foundChr)
+	{
+		fileNameLength = strlen(fileNameStart);
+	}
+	else
+	{
+		fileNameLength = foundChr - fileNameStart;
+	}
+	memcpy(filename, fileNameStart, fileNameLength);
+	filename[fileNameLength] = '\0';
+	strcat(filename, ".png");
+
+	sprintf(outputPath, TEST_IMAGE_EXTRACTED_IMAGES_FOLDER);
+	strcat(outputPath, filename);
 }

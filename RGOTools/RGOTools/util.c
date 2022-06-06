@@ -133,6 +133,11 @@ u32 LittleEndianRead32(const u8* data)
 	return data[0] + (data[1] << 8) + (data[2] << 16) + (data[3] << 24);
 }
 
+u32 LittleEndianRead16(const u8* data)
+{
+	return data[0] + (data[1] << 8);
+}
+
 void GeneratePSPImageFileList(void)
 {
 	const u32 excludedImages[] =

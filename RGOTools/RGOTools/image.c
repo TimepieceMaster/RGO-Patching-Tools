@@ -31,10 +31,10 @@
 #define TILE_WIDTH 16
 #define TILE_HEIGHT 8
 #define TILE_SIZE (TILE_WIDTH * TILE_HEIGHT)
-#define PSP_IMAGE_WIDTH 512
-#define PS2_IMAGE_WIDTH 640
-#define TILES_PER_ROW (PSP_IMAGE_WIDTH / TILE_WIDTH)
-#define TILE_ROW_SIZE (PSP_IMAGE_WIDTH * TILE_HEIGHT)
+#define PSP_IMAGE_DEFAULT_WIDTH 512
+#define PS2_IMAGE_DEFAULT_WIDTH 640
+#define TILES_PER_ROW (PSP_IMAGE_DEFAULT_WIDTH / TILE_WIDTH)
+#define TILE_ROW_SIZE (PSP_IMAGE_DEFAULT_WIDTH * TILE_HEIGHT)
 
 static u32 GetNumBytesToNextHeader(const u8* currentHeader, u32 nSubfiles);
 static bool32 DecompressPSPSubimage(u8* src, u32 srcSize, u8* dst, u32 dstSize);
@@ -50,7 +50,8 @@ NumImagesInfo GetNumImages(const Memory imageData)
 	{
 		.nImages = 1, /* There's always at least 1 palette at the start of the file */
 		.lastPaletteSize = DEFAULT_PALETTE_NUM_BYTES,
-		.hasDefaultHeaderOffset = TRUE
+		.hasDefaultHeaderOffset = TRUE,
+		.hasMAPData = FALSE
 	};
 	u32 color = 0;
 
@@ -72,6 +73,7 @@ NumImagesInfo GetNumImages(const Memory imageData)
 	else if (color == MAP_DATA_SIGNATURE_LITTLE_ENDIAN)
 	{
 		/* MAP data. There's only 1 palette */
+		ret.hasMAPData = TRUE;
 		return ret;
 	}
 	else if (color > 0 && color < 256)
@@ -525,7 +527,7 @@ bool32 WriteToPNG(Memory decompressedImage, u32* palette, u32 width, u32 height,
 	return TRUE;
 }
 
-bool32 ConvertRGOImageToPNG(Memory image, NumImagesInfo numImagesInfo, u8* header, u32 imageIndex, const char* imageOutputPath)
+bool32 ConvertRGOImageToPNG(Memory image, NumImagesInfo numImagesInfo, u8* header, u32 imageIndex, const char* imageOutputPath, u32 customWidth)
 {
 	u32* palette = NULL;
 	Platform platform = 0;
@@ -551,7 +553,14 @@ bool32 ConvertRGOImageToPNG(Memory image, NumImagesInfo numImagesInfo, u8* heade
 		{
 			CorrectPS2Palette(palette, DEFAULT_PALETTE_NUM_BYTES / 4);
 		}
-		width = PS2_IMAGE_WIDTH;
+		if (numImagesInfo.hasMAPData)
+		{
+			width = LittleEndianRead16(&image.data[0x41C]); /* PSP ignores this aspect of the MAP data */
+		}
+		else
+		{
+			width = PS2_IMAGE_DEFAULT_WIDTH;
+		}
 	}
 	else if (platform == PLATFORM_PSP)
 	{
@@ -564,7 +573,11 @@ bool32 ConvertRGOImageToPNG(Memory image, NumImagesInfo numImagesInfo, u8* heade
 		free(decompressedImage.data);
 		decompressedImage = untiledImage;
 
-		width = PSP_IMAGE_WIDTH;
+		width = PSP_IMAGE_DEFAULT_WIDTH;
+	}
+	if (customWidth)
+	{
+		width = customWidth;
 	}
 	height = decompressedImage.size / width;
 	if (!WriteToPNG(decompressedImage, palette, width, height, imageOutputPath))
@@ -577,7 +590,7 @@ bool32 ConvertRGOImageToPNG(Memory image, NumImagesInfo numImagesInfo, u8* heade
 	return TRUE;
 }
 
-void ConvertRGOImageToPNGAll(const char* inputPath, const char* outputPath)
+void ConvertRGOImageToPNGAll(const char* inputPath, const char* outputPath, u32* customWidths)
 {
 	Memory image = { 0 };
 	NumImagesInfo numImagesInfo = { 0 };
@@ -586,6 +599,7 @@ void ConvertRGOImageToPNGAll(const char* inputPath, const char* outputPath)
 	char* outputPathMultipleFiles = NULL;
 	u32 appendLocation = 0;
 	char* appendPtr = NULL;
+	u32 imageWidth = 0;
 
 	image = LoadFile(inputPath);
 	if (!image.data)
@@ -595,7 +609,11 @@ void ConvertRGOImageToPNGAll(const char* inputPath, const char* outputPath)
 	}
 	numImagesInfo = GetNumImages(image);
 	header = GetImageHeader(image, numImagesInfo, 0);
-	if (!ConvertRGOImageToPNG(image, numImagesInfo, header, 0, outputPath))
+	if (customWidths)
+	{
+		imageWidth = customWidths[0];
+	}
+	if (!ConvertRGOImageToPNG(image, numImagesInfo, header, 0, outputPath, imageWidth))
 	{
 		printf("Failed to extract image 0 in %s\n", inputPath);
 	}
@@ -623,7 +641,11 @@ void ConvertRGOImageToPNGAll(const char* inputPath, const char* outputPath)
 		sprintf(&outputPathMultipleFiles[appendLocation], "_%u", i);
 		strcat(outputPathMultipleFiles, &outputPath[appendLocation]);
 		header = GetNextImageHeader(header);
-		if (!ConvertRGOImageToPNG(image, numImagesInfo, header, i, outputPathMultipleFiles))
+		if (customWidths)
+		{
+			imageWidth = customWidths[i];
+		}
+		if (!ConvertRGOImageToPNG(image, numImagesInfo, header, i, outputPathMultipleFiles, imageWidth))
 		{
 			printf("Failed to extract image %u in %s\n", i, inputPath);
 		}

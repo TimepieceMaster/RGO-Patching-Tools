@@ -35,6 +35,9 @@
 #define TEST_IMAGE_CONVERT_RGO_IMAGE_TO_PNG_PS2_INPUT "TestFiles/PS2Images/BK/EG_000_A0.obj"
 #define TEST_IMAGE_CONVERT_RGO_IMAGE_TO_PNG_PSP_OUTPUT "TestFiles/Results/RGOPSPToPNG.png"
 #define TEST_IMAGE_CONVERT_RGO_IMAGE_TO_PNG_PS2_OUTPUT "TestFiles/Results/RGOPS2ToPNG.png"
+#define TEST_IMAGE_EXTRACTED_IMAGES_FOLDER "TestFiles/Results/ExtractedImages/"
+#define TEST_IMAGE_EXTRACT_ALL_IMAGES_STANDARD_WIDTH_FILE_LIST "TestFiles/MiscInput/ExtractAllImagesListStandardWidth.txt"
+#define TEST_IMAGE_EXTRACT_ALL_IMAGES_NONSTANDARD_WIDTH_FILE_LIST "TestFiles/MiscInput/ExtractAllImagesListNonStandardWidth.txt"
 
 void TestUtilLoadFile(const char* inputPath, const char* outputPath);
 void TestUtilFilePathList(const char* inputPath, const char* outputPath);
@@ -43,5 +46,7 @@ void TestImageGetImageHeader(const char* outputPath);
 void TestImageDecompressSingleImage(const char* inputPath, const char* outputPath);
 void TestImageDecompressAllImages(const char* outputPath);
 void TestExtractAllImages(void);
+
+void GenerateExtractAllImagesOutputPath(const char* inputPath, char* outputPath);
 
 #endif

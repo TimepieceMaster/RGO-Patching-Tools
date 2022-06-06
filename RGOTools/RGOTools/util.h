@@ -60,6 +60,7 @@ Memory LoadFile(const char* filePath);
 FilePathList InitFilePathList(Memory fileList);
 bool32 GetNextFilePath(FilePathList* pathList);
 u32 LittleEndianRead32(const u8* data);
+u32 LittleEndianRead16(const u8* data);
 void GeneratePSPImageFileList(void);
 void GeneratePS2ImageFileList(void);
 
