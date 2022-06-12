@@ -1707,7 +1707,6 @@ TestFiles/PSPImages/BIN/2529
 TestFiles/PSPImages/BIN/2530
 TestFiles/PSPImages/BIN/2531
 TestFiles/PSPImages/BIN/2532
-TestFiles/PSPImages/BIN/2533
 TestFiles/PSPImages/BIN/2534
 TestFiles/PSPImages/BIN/2536
 TestFiles/PSPImages/BIN/2538

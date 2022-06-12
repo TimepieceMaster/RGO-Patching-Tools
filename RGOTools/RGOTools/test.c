@@ -78,7 +78,7 @@ void TestUtilFilePathList(const char* inputPath, const char* outputPath)
 	fclose(outputFile);
 }
 
-void TestImageGetNumImages(const char* outputPath)
+void TestImageGetImageInfo(const char* outputPath)
 {
 	const char* filePathListFilePaths[2] = { PSP_IMAGES_FILE_LIST, PS2_IMAGES_FILE_LIST };
 	FILE* outputFile = NULL;
@@ -86,7 +86,7 @@ void TestImageGetNumImages(const char* outputPath)
 	Memory filePathListMemory = { 0 };
 	FilePathList filePathList = { 0 };
 	Memory image = { 0 };
-	NumImagesInfo numImagesInfo = { 0 };
+	ImageInfo imageInfo = { 0 };
 
 	u32 i = 0;
 
@@ -119,8 +119,8 @@ void TestImageGetNumImages(const char* outputPath)
 				fclose(outputFile);
 				return;
 			}
-			numImagesInfo = GetNumImages(image);
-			fprintf(outputFile, "# images: %u. Has MAP Data: %u. File: %s\n", numImagesInfo.nImages, numImagesInfo.hasMAPData, filePathList.currentPath);
+			imageInfo = GetImageInfo(image);
+			fprintf(outputFile, "# images: %u. Has MAP Data: %u. File: %s\n", imageInfo.nImages, imageInfo.hasMAPData, filePathList.currentPath);
 			free(image.data);
 		}
 		free(filePathListMemory.data);
@@ -136,7 +136,7 @@ void TestImageGetImageHeader(const char* outputPath)
 	Memory filePathListMemory = { 0 };
 	FilePathList filePathList = { 0 };
 	Memory image = { 0 };
-	NumImagesInfo numImagesInfo = { 0 };
+	ImageInfo imageInfo = { 0 };
 	u8* header = NULL;
 	u32 nSubfiles = 0;
 
@@ -172,12 +172,12 @@ void TestImageGetImageHeader(const char* outputPath)
 				fclose(outputFile);
 				return;
 			}
-			numImagesInfo = GetNumImages(image);
-			for(j = 0; j < numImagesInfo.nImages; ++j)
+			imageInfo = GetImageInfo(image);
+			for(j = 0; j < imageInfo.nImages; ++j)
 			{
-				header = GetImageHeader(image, numImagesInfo, j);
+				header = GetImageHeader(image, imageInfo, j);
 				nSubfiles = LittleEndianRead32(header);
-				fprintf(outputFile, "Image %u/%u. # subfiles: %u. File: %s\n", j + 1, numImagesInfo.nImages, nSubfiles, filePathList.currentPath);
+				fprintf(outputFile, "Image %u/%u. # subfiles: %u. File: %s\n", j + 1, imageInfo.nImages, nSubfiles, filePathList.currentPath);
 			}
 			free(image.data);
 		}
@@ -190,7 +190,7 @@ void TestImageDecompressSingleImage(const char* inputPath, const char* outputPat
 {
 	FILE* outputFile = NULL;
 	Memory image = { 0 };
-	NumImagesInfo numImagesInfo = { 0 };
+	ImageInfo imageInfo = { 0 };
 	u8* currentHeader = NULL;
 	Platform imagePlatform = 0;
 	Memory decompressedImage = { 0 };
@@ -208,8 +208,8 @@ void TestImageDecompressSingleImage(const char* inputPath, const char* outputPat
 		return;
 	}
 
-	numImagesInfo = GetNumImages(image);
-	currentHeader = GetImageHeader(image, numImagesInfo, 0);
+	imageInfo = GetImageInfo(image);
+	currentHeader = GetImageHeader(image, imageInfo, 0);
 	imagePlatform = GetImagePlatform(currentHeader);
 	decompressedImage = DecompressImage(currentHeader, imagePlatform);
 	if (!decompressedImage.data)
@@ -222,7 +222,7 @@ void TestImageDecompressSingleImage(const char* inputPath, const char* outputPat
 	fwrite(decompressedImage.data, decompressedImage.size, 1, outputFile);
 	free(decompressedImage.data);
 
-	for (i = 1; i < numImagesInfo.nImages; ++i)
+	for (i = 1; i < imageInfo.nImages; ++i)
 	{
 		currentHeader = GetNextImageHeader(currentHeader);
 		decompressedImage = DecompressImage(currentHeader, imagePlatform);
@@ -235,84 +235,6 @@ void TestImageDecompressSingleImage(const char* inputPath, const char* outputPat
 		fwrite(decompressedImage.data, decompressedImage.size, 1, outputFile);
 		free(decompressedImage.data);
 	}
-}
-
-/* This test is just to make sure DecompressImage doesn't crash or fail to decompress on any image.
- * Correctness of the decompression will be evaluated elsewhere. */
-void TestImageDecompressAllImages(const char* outputPath)
-{
-	const char* filePathListFilePaths[2] = { PSP_IMAGES_FILE_LIST, PS2_IMAGES_FILE_LIST };
-	FILE* outputFile = NULL;
-
-	Memory filePathListMemory = { 0 };
-	FilePathList filePathList = { 0 };
-	Memory image = { 0 };
-	NumImagesInfo numImagesInfo = { 0 };
-	u8* currentHeader = NULL;
-	Platform imagePlatform = 0;
-	Memory decompressedImage = { 0 };
-
-	u32 i = 0;
-	u32 j = 0;
-
-	outputFile = fopen(outputPath, "wb");
-	if (!outputFile)
-	{
-		FOPEN_FAIL_MESSAGE(outputPath);
-		return;
-	}
-
-	/* Get all image headers in every image and output the number of subFiles */
-	for (i = 0; i < NUM_ELEMENTS(filePathListFilePaths); ++i)
-	{
-		filePathListMemory = LoadFile(filePathListFilePaths[i]);
-		if (!filePathListMemory.data)
-		{
-			LOAD_FILE_FAIL_MESSAGE(filePathListFilePaths[i]);
-			fclose(outputFile);
-			return;
-		}
-		filePathList = InitFilePathList(filePathListMemory);
-
-		while (GetNextFilePath(&filePathList))
-		{
-			image = LoadFile(filePathList.currentPath);
-			if (!image.data)
-			{
-				LOAD_FILE_FAIL_MESSAGE(filePathList.currentPath);
-				free(filePathListMemory.data);
-				fclose(outputFile);
-				return;
-			}
-			numImagesInfo = GetNumImages(image);
-			currentHeader = GetImageHeader(image, numImagesInfo, 0);
-			imagePlatform = GetImagePlatform(currentHeader);
-			decompressedImage = DecompressImage(currentHeader, imagePlatform);
-			if (!decompressedImage.data)
-			{
-				fprintf(outputFile, "Image %u/%u. File: %s. FAILED\n", j + 1, numImagesInfo.nImages, filePathList.currentPath);
-			}
-			fprintf(outputFile, "Image %u/%u. File: %s. SUCCEEDED.\n", j + 1, numImagesInfo.nImages, filePathList.currentPath);
-			free(decompressedImage.data);
-
-			numImagesInfo = GetNumImages(image);
-			for (j = 1; j < numImagesInfo.nImages; ++j)
-			{
-				currentHeader = GetImageHeader(image, numImagesInfo, 0);
-				decompressedImage = DecompressImage(currentHeader, imagePlatform);
-				if (!decompressedImage.data)
-				{
-					fprintf(outputFile, "Image %u/%u. File: %s. FAILED\n", j + 1, numImagesInfo.nImages, filePathList.currentPath);
-				}
-				fprintf(outputFile, "Image %u/%u. File: %s. SUCCEEDED.\n", j + 1, numImagesInfo.nImages, filePathList.currentPath);
-				free(decompressedImage.data);
-			}
-			free(image.data);
-		}
-		free(filePathListMemory.data);
-	}
-	fclose(outputFile);
-	return;
 }
 
 void TestExtractAllImages(void)

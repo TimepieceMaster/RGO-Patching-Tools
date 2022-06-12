@@ -24,13 +24,12 @@
 #define TEST_UTIL_LOAD_FILE_OUTPUT "TestFiles/Results/LoadFileOutput.log"
 #define TEST_UTIL_FILE_PATH_LIST_INPUT "TestFiles/PSPImages/filelist.txt"
 #define TEST_UTIL_FILE_PATH_LIST_OUTPUT "TestFiles/Results/FilePathListOutput.log"
-#define TEST_IMAGE_GET_NUM_IMAGES_OUTPUT "TestFiles/Results/GetNumImagesOutput.log"
+#define TEST_IMAGE_GET_IMAGE_INFO_OUTPUT "TestFiles/Results/GetNumImagesOutput.log"
 #define TEST_IMAGE_GET_IMAGE_HEADER_OUTPUT "TestFiles/Results/GetImageHeaderOutput.log"
 #define TEST_IMAGE_DECOMPRESS_IMAGE_PSP_INPUT "TestFiles/PSPImages/BIN/824"
 #define TEST_IMAGE_DECOMPRESS_IMAGE_PSP_OUTPUT "TestFiles/Results/DecompressImagePSPOutput.bin"
 #define TEST_IMAGE_DECOMPRESS_IMAGE_PS2_INPUT "TestFiles/PS2Images/BK/BG_000_A0.obj"
 #define TEST_IMAGE_DECOMPRESS_IMAGE_PS2_OUTPUT "TestFiles/Results/DecompressImagePS2Output.bin"
-#define TEST_IMAGE_DECOMPRESS_ALL_IMAGES_OUTPUT "TestFiles/Results/DecompressAllImagesOutput.log"
 #define TEST_IMAGE_CONVERT_RGO_IMAGE_TO_PNG_PSP_INPUT "TestFiles/PSPImages/BIN/824"
 #define TEST_IMAGE_CONVERT_RGO_IMAGE_TO_PNG_PS2_INPUT "TestFiles/PS2Images/BK/EG_000_A0.obj"
 #define TEST_IMAGE_CONVERT_RGO_IMAGE_TO_PNG_PSP_OUTPUT "TestFiles/Results/RGOPSPToPNG.png"
@@ -41,10 +40,9 @@
 
 void TestUtilLoadFile(const char* inputPath, const char* outputPath);
 void TestUtilFilePathList(const char* inputPath, const char* outputPath);
-void TestImageGetNumImages(const char* outputPath);
+void TestImageGetImageInfo(const char* outputPath);
 void TestImageGetImageHeader(const char* outputPath);
 void TestImageDecompressSingleImage(const char* inputPath, const char* outputPath);
-void TestImageDecompressAllImages(const char* outputPath);
 void TestExtractAllImages(void);
 
 void GenerateExtractAllImagesOutputPath(const char* inputPath, char* outputPath);
